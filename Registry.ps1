@@ -14,5 +14,5 @@ foreach ($Path in $AnyCodePaths) {
     }
 }
 
-# 3. Restart Windows Explorer untuk menerapkan semua perubahan
+# 3. Restart Windows Explorer
 Stop-Process -Name explorer -Force
