@@ -1,0 +1,53 @@
+$Services = @(
+"AppIDSvc", "AtherosSvc", "CDPSvc", "ClipSVC", "TrkWks", "DPS",
+"WdiSystemHost", "InventorySvc", "DiagTrack", "WaaSMedicSvc",
+"UsoSvc", "WSAIFabricSvc", "SSDPSRV", "FontCache", "WpnService", "bthserv",
+"BthAvctpSvc", "icssvc", "AcerDeviceEnablingServiceV2", "AcerDIAgentSvis", "AcerEZSvc",
+"AcerQAAgentSvis", "AcerServiceSvc", "ASMSvc", "tzautoupdate", "BITS", "BDESVC",
+"autotimesvc", "DusmSvc", "MapsBroker", "lfsvc", "HvHost", "vmickvpexchange",
+"vmicguestinterface", "vmicshutdown", "vmicheartbeat", "vmicvmsession", "vmicrdv",
+"vmictimesync", "vmicvss", "IgoAudioService", "InstallService", "NetTcpPortSharing",
+"NcbService", "ssh-agent", "WpcMonSvc", "PhoneSvc", "PrintDeviceConfigurationService",
+"Spooler", "PrintNotify", "PrintScanBrokerService", "wercplsupport", "PcaSvc",
+"TroubleshootingSvc", "RasAuto", "RasMan", "SessionEnv", "TermService", "UmRdpService",
+"RemoteRegistry", "RemoteAccess", "seclogon", "SstpSvc", "LanmanServer", "shpamsvc",
+"SCardSvr", "ScDeviceEnum", "SCPolicySvc", "TapiSrv", "wisvc", "WSearch",
+"LanmanWorkstation", "XboxGipSvc", "XblAuthManager", "XblGameSave", "XboxNetApiSvc"
+)
+
+Write-Host "Disabling Services..." -ForegroundColor Magenta
+
+foreach ($svc in $Services) {
+    Write-Host "`nMemproses: $svc" -ForegroundColor Cyan
+
+    $status = Get-Service -Name $svc -ErrorAction SilentlyContinue
+    
+    if ($null -eq $status) {
+        Write-Host "  [!] Service not found, ignore ." -ForegroundColor DarkGray
+        continue
+    }
+
+    if ($status.Status -eq 'Running') {
+        Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
+        Write-Host "  [OK] Services Stopped." -ForegroundColor Green
+    } else {
+        Write-Host "  [-] Services already stopped before." -ForegroundColor DarkGray
+    }
+
+    try {
+        $regPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$svc"
+        Set-ItemProperty -Path $regPath -Name "Start" -Value 4 -ErrorAction Stop
+        Write-Host "  [OK] Startup type disabled locked via registry." -ForegroundColor Green
+
+        cmd.exe /c "sc.exe failure $svc reset= 0 actions= `"`""
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  [OK] Recovery action set to 'Take no action'." -ForegroundColor Green
+        } else {
+            Write-Host "  [!] Recovery Action protected by kernel." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "  [ERROR] error unknown at $svc : $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+
+Write-Host "`nDone, Restart your computer." -ForegroundColor Magenta
