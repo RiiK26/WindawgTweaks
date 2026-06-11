@@ -18,7 +18,7 @@ $Services = @(
 Write-Host "Disabling Services..." -ForegroundColor Magenta
 
 foreach ($svc in $Services) {
-    Write-Host "`nMemproses: $svc" -ForegroundColor Cyan
+    Write-Host "`nProcessing..: $svc" -ForegroundColor Cyan
 
     $status = Get-Service -Name $svc -ErrorAction SilentlyContinue
     
