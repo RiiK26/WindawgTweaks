@@ -1,100 +1,111 @@
 @echo off
-title Update and Cleanup Visual Studio Layout
+setlocal enabledelayedexpansion
+title Update and Cleanup Visual Studio Community 2026
 
-set "InstallerPath=%USERPROFILE%\Downloads\VisualStudioSetup.exe"
-set "LayoutPath=D:\VS_Offline"
-set "ConfigFile=D:\VS_Offline\Custom.vsconfig"
+set "LayoutPath=%~dp0"
+set "LayoutPath=%LayoutPath:~0,-1%"
+set "ConfigFile=%LayoutPath%\Custom.vsconfig"
+set "DirectDownloadLink=https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Stable&version=VS18&source=VSLandingPage&cid=2500&passive=false"
 
-:VERIFIKASI
+:FIND_INSTALLER
+set "InstallerPath="
+for /f "delims=" %%I in ('dir /b /a-d /o-d "%USERPROFILE%\Downloads\VisualStudioSetup*.exe" "%USERPROFILE%\Downloads\vs_*.exe" 2^>nul') do (
+    set "InstallerPath=%USERPROFILE%\Downloads\%%I"
+    goto VERIFICATION
+)
+
+:VERIFICATION
 cls
 echo ======================================================
-echo  PERSIAPAN UPDATE VISUAL STUDIO (DENGAN CONFIG CUSTOM)
+echo  UPDATE VISUAL STUDIO COMMUNITY 2026 LAYOUT
 echo ======================================================
-echo Apakah Anda SUDAH mendownload file VisualStudioSetup.exe TERBARU
-echo dan membiarkannya di folder Downloads?
-echo "%InstallerPath%"
+echo Lokasi Layout : "%LayoutPath%"
+echo Lokasi Config : "%ConfigFile%"
 echo.
-echo Pilihan:
-echo [Y] Lanjut - File baru siap, mulai proses update!
-echo [T] Tahan  - Tunggu sebentar, file belum selesai di-download.
-echo [N] Stop   - Batal, keluar dari program.
+if defined InstallerPath (
+    echo [OK] Installer DITEMUKAN:
+    echo "%InstallerPath%"
+) else (
+    echo [!] Installer BELUM DITEMUKAN di folder Downloads.
+)
+echo.
+echo Pilihan Aksi:
+if defined InstallerPath echo [Y] Lanjut   - Mulai proses update menggunakan installer di atas!
+echo [D] Download - Buka link otomatis, dan PAUSE sampai download selesai.
+echo [N] Batal    - Keluar dari program.
 echo ======================================================
-set /p konfirmasi="Masukkan pilihan Anda (Y/T/N): "
+set /p Confirmation="Masukkan pilihan (Y/D/N): "
 
-if /i "%konfirmasi%"=="Y" goto PROSES_UPDATE
-if /i "%konfirmasi%"=="T" goto PROSES_TAHAN
-if /i "%konfirmasi%"=="N" goto PROSES_BATAL
+if /i "%Confirmation%"=="Y" if defined InstallerPath goto UPDATE_PROCESS
+if /i "%Confirmation%"=="D" goto DOWNLOAD_PROCESS
+if /i "%Confirmation%"=="N" goto CANCEL_PROCESS
 
-goto VERIFIKASI
+goto VERIFICATION
 
-:PROSES_TAHAN
+:DOWNLOAD_PROCESS
 echo.
-echo Silakan download file VisualStudioSetup.exe sekarang.
-echo Jika sudah selesai, tekan tombol apa saja untuk kembali...
+echo Membuka link download otomatis di browser...
+
+start "" "%DirectDownloadLink%"
+echo.
+echo Silakan tunggu sampai proses download di browser selesai 100%%.
+echo Jika download sudah selesai, tekan tombol apa saja di keyboard...
 pause >nul
-goto VERIFIKASI
 
-:PROSES_BATAL
+goto FIND_INSTALLER
+
+:CANCEL_PROCESS
 echo.
-echo Proses dibatalkan oleh pengguna. Keluar dari program...
+echo Proses dibatalkan.
 timeout /t 3 >nul
 exit /b
 
-:PROSES_UPDATE
+:UPDATE_PROCESS
 echo.
 echo ======================================================
-echo  PROSES 1: MENGUPDATE LAYOUT VISUAL STUDIO
+echo  PROSES 1: MENGUPDATE LAYOUT ^& KOMPONEN
 echo ======================================================
-if not exist "%InstallerPath%" (
-    echo [ERROR] File VisualStudioSetup.exe tidak ditemukan di folder Downloads!
-    pause
-    goto VERIFIKASI
-)
-
 if not exist "%ConfigFile%" (
-    echo [ERROR] File config tidak ditemukan di "%ConfigFile%"!
-    echo Pastikan Anda sudah mengubah nama file config Anda menjadi Custom.vsconfig
+    echo [ERROR] File Custom.vsconfig tidak ditemukan di folder layout!
     pause
-    goto VERIFIKASI
+    goto VERIFICATION
 )
 
-echo Membaca daftar komponen baru dari Custom.vsconfig...
-echo Memulai proses unduhan paket...
+echo Membaca daftar komponen dari Custom.vsconfig...
+echo SELAMA PROSES BERJALAN, HARAP JANGAN DITUTUP CONSOLE INI
+echo KARENA PROSES PEMBERSIHAN AKAN OTOMATIS BERJALAN SETELAH UPDATE SELESAI
+echo 
 "%InstallerPath%" --layout "%LayoutPath%" --config "%ConfigFile%"
-echo Update paket komponen selesai.
+echo Update selesai.
 
 echo.
 echo ======================================================
-echo  PROSES 2: MEMBERSIHKAN FILE VERSI LAMA (CLEANUP)
+echo  PROSES 2: MEMBERSIHKAN FILE VERSI LAMA
 echo ======================================================
 if not exist "%LayoutPath%\Archive" (
     echo Folder Archive belum ada. Tidak ada file usang.
-    goto SELESAI
+    goto DONE
 )
 
 for /d %%D in ("%LayoutPath%\Archive\*") do (
     if exist "%%D\Catalog.json" (
         echo.
-        echo [Ditemukan file usang di: %%D]
-        echo Memulai proses cleanup paket...
-        
+        echo [Membersihkan file usang di: %%D]
         "%InstallerPath%" --layout "%LayoutPath%" --clean "%%D\Catalog.json"
         
-        echo.
-        echo Menghapus sisa folder katalog lama...
+        echo Menghapus sisa folder...
         rmdir /s /q "%%D"
-        echo Folder %%D berhasil dihapus!
     )
 )
 
-:SELESAI
+:DONE
 echo.
 echo ======================================================
-echo  SELESAI! LAYOUT OFFLINE SUDAH TERUPDATE DAN BERSIH.
+echo  SELESAI! LAYOUT SUDAH TERUPDATE DAN BERSIH.
 echo ======================================================
 echo.
-set /p hapusInstaller="Apakah Anda ingin menghapus VisualStudioSetup.exe dari folder Downloads? (Y/N): "
-if /i "%hapusInstaller%"=="Y" (
+set /p DeleteInstaller="Apakah Anda ingin langsung menghapus installer dari folder Downloads? (Y/N): "
+if /i "%DeleteInstaller%"=="Y" (
     del /q "%InstallerPath%"
     echo File installer berhasil dihapus.
 )
