@@ -6,201 +6,157 @@ Write-Host "`n[1/8] Character Map" -ForegroundColor Yellow
 $charMap = "$env:WINDIR\System32\charmap.exe"
 
 if (Test-Path $charMap) {
-Write-Host "Character Map adalah system component." -ForegroundColor DarkYellow
-Write-Host "Tidak dihapus untuk menjaga integritas Windows." -ForegroundColor DarkGray
+    Write-Host "Character Map adalah system component." -ForegroundColor DarkYellow
+    Write-Host "Tidak dihapus untuk menjaga integritas Windows." -ForegroundColor DarkGray
 }
 else {
-Write-Host "Character Map tidak ditemukan." -ForegroundColor DarkGray
+    Write-Host "Character Map tidak ditemukan." -ForegroundColor DarkGray
 }
 
 # 2. INTERNET EXPLORER
 Write-Host "`n[2/8] Internet Explorer" -ForegroundColor Yellow
 
 $ie = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
-Where-Object {
-$*.Name -like "Browser.InternetExplorer*" -and
-$*.State -eq "Installed"
-}
+    Where-Object {
+        $_.Name -like "Browser.InternetExplorer*" -and
+        $_.State -eq "Installed"
+    }
 
 if ($ie) {
-foreach ($item in $ie) {
-Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
-Remove-WindowsCapability -Online `            -Name $item.Name`
--ErrorAction SilentlyContinue
-}
-
-
-Write-Host "Internet Explorer selesai dihapus." -ForegroundColor Green
-
-
+    foreach ($item in $ie) {
+        Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
+        Remove-WindowsCapability -Online -Name $item.Name -ErrorAction SilentlyContinue
+    }
+    Write-Host "Internet Explorer selesai dihapus." -ForegroundColor Green
 }
 else {
-Write-Host "Internet Explorer tidak terdeteksi sebagai capability terpasang." -ForegroundColor DarkGray
+    Write-Host "Internet Explorer tidak terdeteksi sebagai capability terpasang." -ForegroundColor DarkGray
 }
 
 # 3. MATH INPUT PANEL / MATH RECOGNIZER
 Write-Host "`n[3/8] Math Input Panel / Math Recognizer" -ForegroundColor Yellow
 
 $math = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
-Where-Object {
-$*.Name -like "MathRecognizer*" -and
-$*.State -eq "Installed"
-}
+    Where-Object {
+        $_.Name -like "MathRecognizer*" -and
+        $_.State -eq "Installed"
+    }
 
 if ($math) {
-foreach ($item in $math) {
-Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
-Remove-WindowsCapability -Online `            -Name $item.Name`
--ErrorAction SilentlyContinue
-}
-
-
-Write-Host "Math Recognizer selesai dihapus." -ForegroundColor Green
-
-
+    foreach ($item in $math) {
+        Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
+        Remove-WindowsCapability -Online -Name $item.Name -ErrorAction SilentlyContinue
+    }
+    Write-Host "Math Recognizer selesai dihapus." -ForegroundColor Green
 }
 else {
-Write-Host "Math Recognizer tidak ditemukan." -ForegroundColor DarkGray
+    Write-Host "Math Recognizer tidak ditemukan." -ForegroundColor DarkGray
 }
 
 # 4. QUICK ASSIST
 Write-Host "`n[4/8] Quick Assist" -ForegroundColor Yellow
 
-$quickAssist = Get-AppxPackage -AllUsers `    -Name "MicrosoftCorporationII.QuickAssist"`
--ErrorAction SilentlyContinue
+$quickAssist = Get-AppxPackage -AllUsers -Name "MicrosoftCorporationII.QuickAssist" -ErrorAction SilentlyContinue
 
 if ($quickAssist) {
+    Write-Host "Menghapus Quick Assist..." -ForegroundColor Cyan
 
+    Get-AppxPackage -AllUsers -Name "MicrosoftCorporationII.QuickAssist" |
+        Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
 
-Write-Host "Menghapus Quick Assist..." -ForegroundColor Cyan
-
-Get-AppxPackage -AllUsers `
-    -Name "MicrosoftCorporationII.QuickAssist" |
-    Remove-AppxPackage -AllUsers `
-    -ErrorAction SilentlyContinue
-
-Write-Host "Quick Assist selesai dihapus." -ForegroundColor Green
-
-
+    Write-Host "Quick Assist selesai dihapus." -ForegroundColor Green
 }
 else {
-Write-Host "Quick Assist tidak ditemukan." -ForegroundColor DarkGray
+    Write-Host "Quick Assist tidak ditemukan." -ForegroundColor DarkGray
 }
 
 # 5. STEPS RECORDER
 Write-Host "`n[5/8] Steps Recorder" -ForegroundColor Yellow
 
 $steps = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
-Where-Object {
-$*.Name -like "App.StepsRecorder*" -and
-$*.State -eq "Installed"
-}
+    Where-Object {
+        $_.Name -like "App.StepsRecorder*" -and
+        $_.State -eq "Installed"
+    }
 
 if ($steps) {
-foreach ($item in $steps) {
-Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
-
-
-    Remove-WindowsCapability -Online `
-        -Name $item.Name `
-        -ErrorAction SilentlyContinue
-}
-
-Write-Host "Steps Recorder selesai dihapus." -ForegroundColor Green
-
-
+    foreach ($item in $steps) {
+        Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
+        Remove-WindowsCapability -Online -Name $item.Name -ErrorAction SilentlyContinue
+    }
+    Write-Host "Steps Recorder selesai dihapus." -ForegroundColor Green
 }
 else {
-Write-Host "Steps Recorder tidak ditemukan." -ForegroundColor DarkGray
+    Write-Host "Steps Recorder tidak ditemukan." -ForegroundColor DarkGray
 }
 
 # 6. WINDOWS FAX AND SCAN
 Write-Host "`n[6/8] Windows Fax and Scan" -ForegroundColor Yellow
 
 $fax = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
-Where-Object {
-$*.Name -like "Print.Fax.Scan*" -and
-$*.State -eq "Installed"
-}
+    Where-Object {
+        $_.Name -like "Print.Fax.Scan*" -and
+        $_.State -eq "Installed"
+    }
 
 if ($fax) {
-foreach ($item in $fax) {
-Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
-
-
-    Remove-WindowsCapability -Online `
-        -Name $item.Name `
-        -ErrorAction SilentlyContinue
-}
-
-Write-Host "Windows Fax and Scan selesai dihapus." -ForegroundColor Green
-
-
+    foreach ($item in $fax) {
+        Write-Host "Menghapus $($item.Name)..." -ForegroundColor Cyan
+        Remove-WindowsCapability -Online -Name $item.Name -ErrorAction SilentlyContinue
+    }
+    Write-Host "Windows Fax and Scan selesai dihapus." -ForegroundColor Green
 }
 else {
-Write-Host "Windows Fax and Scan tidak ditemukan." -ForegroundColor DarkGray
+    Write-Host "Windows Fax and Scan tidak ditemukan." -ForegroundColor DarkGray
 }
 
 # 7. WINDOWS MEDIA PLAYER
 Write-Host "`n[7/8] Windows Media Player" -ForegroundColor Yellow
 
-$wmp = Get-WindowsOptionalFeature -Online `    -FeatureName "WindowsMediaPlayer"`
--ErrorAction SilentlyContinue
+$wmp = Get-WindowsOptionalFeature -Online -FeatureName "WindowsMediaPlayer" -ErrorAction SilentlyContinue
 
 if ($wmp -and $wmp.State -eq "Enabled") {
+    Write-Host "Menonaktifkan Windows Media Player..." -ForegroundColor Cyan
 
+    Disable-WindowsOptionalFeature `
+        -Online `
+        -FeatureName "WindowsMediaPlayer" `
+        -Remove `
+        -NoRestart `
+        -ErrorAction SilentlyContinue
 
-Write-Host "Menonaktifkan Windows Media Player..." -ForegroundColor Cyan
-
-Disable-WindowsOptionalFeature `
-    -Online `
-    -FeatureName "WindowsMediaPlayer" `
-    -Remove `
-    -NoRestart `
-    -ErrorAction SilentlyContinue
-
-Write-Host "Windows Media Player selesai dinonaktifkan." -ForegroundColor Green
-
-
+    Write-Host "Windows Media Player selesai dinonaktifkan." -ForegroundColor Green
 }
 else {
-Write-Host "Windows Media Player sudah tidak aktif." -ForegroundColor DarkGray
+    Write-Host "Windows Media Player sudah tidak aktif." -ForegroundColor DarkGray
 }
 
 # 8. WORDPAD
 Write-Host "`n[8/8] WordPad" -ForegroundColor Yellow
 
 $wordpad = @(
-"$env:ProgramFiles\Windows NT\Accessories\wordpad.exe",
-"$env:ProgramFiles\Windows NT\Accessories\write.exe",
-"$env:ProgramFiles\Windows NT\Accessories\wordpadfilter.dll",
-"$env:ProgramFiles(x86)\Windows NT\Accessories\wordpad.exe"
+    "$env:ProgramFiles\Windows NT\Accessories\wordpad.exe",
+    "$env:ProgramFiles\Windows NT\Accessories\write.exe",
+    "$env:ProgramFiles\Windows NT\Accessories\wordpadfilter.dll",
+    "$env:ProgramFiles(x86)\Windows NT\Accessories\wordpad.exe"
 )
 
 $found = $false
 
 foreach ($file in $wordpad) {
-
-if (Test-Path $file) {
-
-    $found = $true
-
-    Write-Host "Menghapus: $file" -ForegroundColor Cyan
-
-    Remove-Item $file `
-        -Force `
-        -ErrorAction SilentlyContinue
-}
-
+    if (Test-Path $file) {
+        $found = $true
+        Write-Host "Menghapus: $file" -ForegroundColor Cyan
+        Remove-Item $file -Force -ErrorAction SilentlyContinue
+    }
 }
 
 if ($found) {
-Write-Host "WordPad selesai dihapus." -ForegroundColor Green
+    Write-Host "WordPad selesai dihapus." -ForegroundColor Green
 }
 else {
-Write-Host "WordPad tidak ditemukan." -ForegroundColor DarkGray
+    Write-Host "WordPad tidak ditemukan." -ForegroundColor DarkGray
 }
-
 
 Write-Host "`n==============================================" -ForegroundColor Cyan
 Write-Host " PROSES SELESAI" -ForegroundColor Green
@@ -211,5 +167,5 @@ Write-Host "`nDisarankan melakukan RESTART Windows." -ForegroundColor Yellow
 $restart = Read-Host "Restart sekarang? (Y/N)"
 
 if ($restart -match "^[Yy]$") {
-Restart-Computer
+    Restart-Computer
 }
