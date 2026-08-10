@@ -55,18 +55,29 @@ else {
 # 4. QUICK ASSIST
 Write-Host "`n[4/8] Quick Assist" -ForegroundColor Yellow
 
-$quickAssist = Get-AppxPackage -AllUsers -Name "MicrosoftCorporationII.QuickAssist" -ErrorAction SilentlyContinue
+$qaCapability = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.Name -like "*QuickAssist*" -and
+        $_.State -eq "Installed"
+    }
 
-if ($quickAssist) {
-    Write-Host "Deleting Quick Assist..." -ForegroundColor Cyan
-
-    Get-AppxPackage -AllUsers -Name "MicrosoftCorporationII.QuickAssist" |
-        Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-
-    Write-Host "Quick Assist uninstalled." -ForegroundColor Green
+if ($qaCapability) {
+    foreach ($item in $qaCapability) {
+        Write-Host "Deleting Capability $($item.Name)..." -ForegroundColor Cyan
+        Remove-WindowsCapability -Online -Name $item.Name -ErrorAction SilentlyContinue
+    }
 }
-else {
-    Write-Host "Quick Assist not found." -ForegroundColor DarkGray
+
+$quickAssistPackages = Get-AppxPackage -AllUsers -Name "*QuickAssist*" -ErrorAction SilentlyContinue
+if ($quickAssistPackages) {
+    foreach ($pkg in $quickAssistPackages) {
+        Write-Host "Deleting Appx Package $($pkg.Name)..." -ForegroundColor Cyan
+        Remove-AppxPackage -Package $pkg.PackageFullName -AllUsers -ErrorAction SilentlyContinue
+        Remove-AppxProvisionedPackage -Online -PackageName $pkg.PackageFullName -ErrorAction SilentlyContinue
+    }
+    Write-Host "Quick Assist uninstalled." -ForegroundColor Green
+} else {
+    Write-Host "Quick Assist not found or already uninstalled." -ForegroundColor DarkGray
 }
 
 # 5. STEPS RECORDER
@@ -100,7 +111,7 @@ $fax = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
 
 if ($fax) {
     foreach ($item in $fax) {
-        Write-Host "Deleting $($item.Name)..." -ForegroundColor Cyan
+        Write-Host "Deleting $($item.Name)..." -Registry-Error -ErrorAction SilentlyContinue
         Remove-WindowsCapability -Online -Name $item.Name -ErrorAction SilentlyContinue
     }
     Write-Host "Windows Fax and Scan uninstalled." -ForegroundColor Green
@@ -133,24 +144,41 @@ else {
 # 8. WORDPAD
 Write-Host "`n[8/8] WordPad" -ForegroundColor Yellow
 
-$wordpad = @(
+$wordpadCaps = Get-WindowsCapability -Online -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.Name -like "*WordPad*" -and
+        $_.State -eq "Installed"
+    }
+
+if ($wordpadCaps) {
+    foreach ($cap in $wordpadCaps) {
+        Write-Host "Removing capability $($cap.Name)..." -ForegroundColor Cyan
+        Remove-WindowsCapability -Online -Name $cap.Name -ErrorAction SilentlyContinue
+    }
+}
+
+$wordpadFiles = @(
     "$env:ProgramFiles\Windows NT\Accessories\wordpad.exe",
     "$env:ProgramFiles\Windows NT\Accessories\write.exe",
     "$env:ProgramFiles\Windows NT\Accessories\wordpadfilter.dll",
-    "$env:ProgramFiles(x86)\Windows NT\Accessories\wordpad.exe"
+    "$env:ProgramFiles(x86)\Windows NT\Accessories\wordpad.exe",
+    "$env:ProgramFiles(x86)\Windows NT\Accessories\write.exe"
 )
 
 $found = $false
 
-foreach ($file in $wordpad) {
+foreach ($file in $wordpadFiles) {
     if (Test-Path $file) {
         $found = $true
+        Takeown.exe /f $file /a 2>&1 | Out-Null
+        icacls.exe $file /grant "Administrators:F" 2>&1 | Out-Null
+        
         Write-Host "Deleting: $file" -ForegroundColor Cyan
         Remove-Item $file -Force -ErrorAction SilentlyContinue
     }
 }
 
-if ($found) {
+if ($wordpadCaps -or $found) {
     Write-Host "WordPad uninstalled." -ForegroundColor Green
 }
 else {
