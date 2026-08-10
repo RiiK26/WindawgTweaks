@@ -158,7 +158,7 @@ else {
 }
 
 Write-Host "`n==============================================" -ForegroundColor Cyan
-Write-Host " PROSES SELESAI" -ForegroundColor Green
+Write-Host " Done" -ForegroundColor Green
 Write-Host "==============================================" -ForegroundColor Cyan
 
 Write-Host "`nRestart needed." -ForegroundColor Yellow
