@@ -50,6 +50,37 @@ foreach ($Path in $AnyCodePaths) {
     }
 }
 
+# Set Performance settings (sysdm.cpl) 
+Write-Host "Configuring Visual Effects (Only Smooth Edges of Screen Fonts enabled)..." -ForegroundColor Yellow
+
+# 1. Set Visual Effects to "Custom" (Value: 3)
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Value 3 -Type DWord -Force
+
+# 2. ENABLE: Smooth edges of screen fonts (ClearType)
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "FontSmoothing" -Value "2" -Type String -Force
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "FontSmoothingType" -Value 2 -Type DWord -Force
+
+# 3. DISABLE: Window dragging contents & Minimize/Maximize animations
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "DragFullWindows" -Value "0" -Type String -Force
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop\WindowMetrics" -Name "MinAnimate" -Value "0" -Type String -Force
+
+# 4. DISABLE: Explorer advanced visual features (Thumbnails, Shadows, Peek, Animations)
+$explorerAdvPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+$advSettings = @{
+    "IconsOnly" = 1             # 1 = Show icons instead of thumbnails
+    "ListviewAlphaSelect" = 0   # 0 = Disable translucent selection rectangle
+    "ListviewShadow" = 0        # 0 = Disable drop shadows for icon labels
+    "TaskbarAnimations" = 0     # 0 = Disable taskbar animations
+    "DisablePreviewDesktop" = 1 # 1 = Disable Peek
+}
+foreach ($key in $advSettings.Keys) {
+    Set-ItemProperty -Path $explorerAdvPath -Name $key -Value $advSettings[$key] -Type DWord -Force
+}
+
+# 5. DISABLE: Menu Fading, Sliding, and Window Shadows (UserPreferencesMask)
+[byte[]]$userPrefMask = 0x90, 0x12, 0x03, 0x80, 0x10, 0x00, 0x00, 0x00
+Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "UserPreferencesMask" -Value $userPrefMask -Force
+
 Write-Host "Registry configurations successfully applied." -ForegroundColor Green
 
 # Restart Windows Explorer to apply UI changes
